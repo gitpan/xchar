@@ -1,0 +1,34 @@
+
+xchar, version 0.1
+
+Copyright (C) 2006-2007 Brian Keck.  All rights reserved.  This module
+is free software; you can redistribute and/or modify it under the same
+terms as Perl itself.
+
+For a description of xchar see firstly xchar.pod in this directory
+(xchar-n.n), which becomes xchar(1) after installation.
+
+Prerequisites are Tk and X11::Protocol.
+
+Install in the usual way:
+
+	perl Makefile.PL
+	make
+	make install 
+
+The 'make test' is useless currently.
+
+If you're impatient, & happen to be using fvwm, a quick way to start is:
+
+	mk.xtb > ~/.xtb
+	mk.xscreens > ~/.xscreens
+	mk.xchar fvwm >> $FVWMRC
+
+where FVWMRC is ~/.fvwm/config or ~/.fvwmrc.
+
+If you don't use fvwm, instead of the last step, look at the output of
+'mk.xchar fvwm' & create similar key mappings for your window manager.
+
+Brian Keck
+bwkeck@gmail.com
+
