@@ -1,5 +1,5 @@
 # $Source: /home/keck/lib/perl/X11/RCS/Tops.pm,v $
-# $Revision: 3.19 $$Date: 2007/07/01 14:48:29 $
+# $Revision: 3.25 $$Date: 2007/07/07 07:52:11 $
 # Contents
 #   1 standard           13 X                25 command
 #   2 constants          14 match            26 monitor changes
@@ -25,6 +25,8 @@ use Carp;
 use Data::Dumper;
 use strict;
 use warnings;
+
+our $VERSION = 0.2;
 
 # ----------------------------------------------------------------------
 
@@ -120,7 +122,7 @@ sub update {
     for my $id (@$newids) {
       $seen{$id} = 1;
       $xtops->{byid}{$id} =
-        bless { xtops => $xtops, id => $id }, 'X11::Top'
+          bless { xtops => $xtops, id => $id }, 'X11::Top'
         unless $xtops->{byid}{$id};
     }
     for my $id (keys %{$xtops->{byid}}) {
@@ -132,8 +134,8 @@ sub update {
     }
   } else {
     for my $id (@$newids) {
-     $xtops->{byid}{$id} =
-       bless { xtops => $xtops, id => $id }, 'X11::Top';
+      $xtops->{byid}{$id} =
+        bless { xtops => $xtops, id => $id }, 'X11::Top';
     }
   }
   for my $xtop (values %{$xtops->{byid}}) {
@@ -143,7 +145,7 @@ sub update {
       defined $xtop->{char};
   }
   $xtops->sort;
-  \@deleted;
+  @deleted;
 }
 
 # ----------------------------------------------------------------------
@@ -188,10 +190,21 @@ sub choosechar {
 
 sub sort {
   my $xtops = shift;
-  my $order = $xtops->{order};
-  unless ($order) {
-    my $n = 0;
-    $order->{$_} = $n++ for 'a' .. 'z', '0' .. '9';
+  my $order = $xtops->{order}; # hashref char->integer
+  my $max = -1;
+  if ($order) {
+    for (values %$order) {
+      croak(
+        "values in order hash should be nonnegative integers," .
+        " not '$_'"
+      ) unless /^\d+$/;
+      $max = $_ if $max < $_; 
+    } 
+  }
+  for my $n (0 .. 127) {
+    my $char = chr($n);
+    next if defined $order->{$char};
+    $order->{$char} = $max + 1 + $n;
   }
   @{$xtops->{sorted}} =
     sort { $order->{$a->{char}} <=> $order->{$b->{char}} }
@@ -245,7 +258,7 @@ sub match {
   }
 }
 
-for my $sub (qw(class instance title name char)) {
+for my $sub (qw(class instance title icon char)) {
   no strict 'refs';
   *$sub = sub {
     my ($xtops, $regex) = @_;
@@ -854,7 +867,7 @@ __END__
 # 3.16
 #   changed _XLS_ to _XCHAR_
 
-# $Revision: 3.19 $
+# $Revision: 3.25 $
 
 # ----------------------------------------------------------------------
 
@@ -862,7 +875,12 @@ __END__
 
 =head1 NAME
 
-X11::Tops
+X11::Tops - handle top level X windows
+
+=head1 WARNING
+
+The high level part of the interface is currently (xchar 0.2) clumsy,
+and will probably be changed.
 
 =head1 SYNOPSIS
 
@@ -872,48 +890,178 @@ X11::Tops
   use X11::Tops;
   $X = X11::Protocol->new;
   $xtops = X11::Tops->new($X);
-  @xtops = X11::Tops->new($X)->sort;
 
-  print $xtops->[0]->class, "\n";
-  print $xtops->[0]->instance, "\n";
-  print $xtops->[0]->icon, "\n";
-  print $xtops->[0]->title, "\n";
-
-  for my $xtop (@$xtops) { print $xtop->instance, "\n" }
+  $xtops->update;
+  for $xtop (@{$xtops->sorted}) {
+    print join("\t",
+      $xtop->class, $xtop->instance, $xtop->title, $stop->icon
+    ),
+    "\n"
+  }
 
   $xtop = $xtops->match('instance', qr/gecko/i);
   $xtop = $xtops->instance(qr/gecko/i);
-  $xtop = $xtops->icon(qr/gecko/i);
+  $xtop = $xtops->icon(qr/apod/i);
 
   $xtop->char('q');
   $xtop->char;
 
-  ($xtops, @deleted) = $xtops->update;
+  @deleted = $xtops->update; # list of X ids
 
+  $xtops->monitor_property_change;
   $xtop->monitor_property_change
-  X11::Top::monitor_property_change($X->root);
 
 =head1 DESCRIPTION
 
-An X11::Tops object is an array of X11::Top objects.
+X11:Tops handles all the top level windows reported by the window
+manager via the root window _NET_CLIENT_LIST property.  Most of the
+methods are general, but there's also support for the xchar(1) system
+(which is currently insufficiently separated from the general methods).
+It is built on top of the X11::Protocol module.
 
-Both classes have class, instance, title & icon methods.  For X11::Tops
-there is a regex argument & the method returns an X11::Top object whose
-corresponding property matches the regex.  For X11::Top there is no argument
-(other than the object) & the corresponding property is returned.  Class
-& instance are handled separately even though they come from the same
-property (WM_CLASS).  Values of class & instance are assumed not to
-change (so are cached).
+It's designed to handle long-lived programs that keep track of changes
+in the population of top level windows (such as xtb(1)) and short-lived
+programs that just want a snapshot (such as xup(1) and xmv(1)).
+
+An X11::Tops object C<$xtops> contains a set of X11::Top objects
+C<$xtop>.  The latter can be reached with several methods of the former:
+
+    $xtops->sorted  returns a reference to an array of $xtop
+    $xtops->byid    returns a hashref, each value an $xtop
+    $xtops->bychar  returns a hashref, each value an $xtop
+
+The construction of $xtops can take one or several steps, and can be partial
+or complete.  As mentioned in the warning above, this is currently clumsy.
+
+The following constructs it completely:
+
+    $xtops = X11::Tops->new;
+    $xtops->update;
+
+This fetches all (toplevel) window ids and all their WM_CLASS properties,
+calculating a character for each & setting the _XCHAR_CHAR property on
+it accordingly.
+
+The following also constructs it completely:
+
+    $xtops = X11::Tops->new;
+    $xtops->update_from_props;
+
+the difference being that the per-window characters aren't computed
+as above but fetched from the _XCHAR_CHAR propertes.
+
+The construction used by the C<update> method above uses a hardwired
+algorithm for assigning characters to windows.  The algorithm can
+instead be flexibly specified:
+
+    $xtops = X11::Tops->new;
+    $xtops->{char} = sub { $instance = shift; ...; return $char; };
+    $xtops->update;
+
+The C<sort> method mentioned above uses a hardwired sort algorithm that
+can be over-ridden:
+
+    $xtops = X11::Tops->new;
+    $xtops->{char} = sub { $instance = shift; ...; return $char; };
+    $xtops->update;
+    $xtops->{order} = ['a' .. 'z', 0 .. 9, 'A' .. 'Z'];
+    @xtops = $xtops->sort;
+
+Partial construction, as for snapshotting, is typically:
+
+    $xtops = X11::Tops->new->update_ids;
+    for $xtop (values %{$xtops->byid}) { ... }
+
+Both X11::Tops and X11::Top have class, instance, title & icon methods.
+They only get, not set.  For X11::Tops there is a regex argument & the
+method returns an X11::Top object whose corresponding property matches
+the regex.  For X11::Top there is no argument (other than the object) &
+the corresponding property is returned.  Class & instance are handled
+separately even though they come from the same property (WM_CLASS).
+Values of class & instance are assumed not to change (so are cached).
 
 The X11::Top method C<char> gets or sets a (non-standard) property
 _XCHAR_CHAR.  Normally the character name of a toplevel is derived from
-the instance name.
+the instance name via $xtops->{char} as above.
 
-=head1 RCS
+=head1 OTHER X11::Xtops METHODS
+
+=over
+
+=item X()
+
+returns the associated X11::Protocol object
+
+=item active()
+
+returns the X id of the active window
+
+=item stacking()
+
+returns the array of X ids in stacking order (bottom first)
+
+=item monitor_property_change()
+
+asks for root PropertyChange events
+
+=back
+
+=head1 OTHER X11::Xtop METHODS
+
+=over
+
+=item command()
+
+gets or sets the _XCHAR_COMMAND property
+
+=item attributes()
+
+X11::Protocol::GetWindowAttributes
+
+=item raise()
+
+=item raise_and_focus()
+
+=item lower()
+
+=item geometry()
+
+=item frame_geometry()
+
+=item wm_normal_hints()
+
+=item parse_geometry()
+
+=item requested_geometry()
+
+=item move()
+
+=item expand()
+
+=item monitor_property_change()
+
+asks for PropertyChange events
+
+=item monitor_property_and_visibility_change()
+
+asks for PropertyChange & VisibilityChange events
+
+=item monitor_property_and_structure_change()
+
+asks for PropertyChange & SubstructureNotifyMask events
+
+=back
+
+=head1 AUTHOR
+
+Brian Keck E<lt>bwkeck@gmail.comE<gt>
+
+=head1 VERSION
 
  $Source: /home/keck/lib/perl/X11/RCS/Tops.pm,v $
- $Revision: 3.19 $
- $Date: 2007/07/01 14:48:29 $
+ $Revision: 3.25 $
+ $Date: 2007/07/07 07:52:11 $
+ xchar 0.2
 
 =cut
 

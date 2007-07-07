@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 # $Source: /home/keck/gen/RCS/xdeco,v $
-# $Revision: 1.74 $$Date: 2007/06/20 07:06:59 $
+# $Revision: 1.77 $$Date: 2007/07/05 17:00:28 $
 # Contents
 #   1 standard     6 pathsplit  11 xchar & host      16 title
 #   2 environment  7 width      12 directory/folder  17 icon
@@ -17,6 +17,7 @@ use warnings;
 
 (my $cmd = $0) =~ s-.*/--;
 
+sub usage { print "Usage: $cmd -help\n"; }
 sub quit { (@_) ? print STDERR "$cmd quitting: @_\n" : &usage; exit 1 }
 
 # ----------------------------------------------------------------------
@@ -533,7 +534,7 @@ __END__
 # 1.67
 #   added %i for instance character [+taskbar]
 
-# $Revision: 1.74 $
+# $Revision: 1.77 $
 
 # ----------------------------------------------------------------------
 
@@ -669,11 +670,16 @@ Debian has a package called xtermcontrol.
 
 See also xdh -help.
 
-=head1 RCS
+=head1 AUTHOR
+
+Brian Keck E<lt>bwkeck@gmail.comE<gt>
+
+=head1 VERSION
 
  $Source: /home/keck/gen/RCS/xdeco,v $
- $Revision: 1.74 $
- $Date: 2007/06/20 07:06:59 $
+ $Revision: 1.77 $
+ $Date: 2007/07/05 17:00:28 $
+ xchar 0.2
 
 =cut
 

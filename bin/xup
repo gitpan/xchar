@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 # $Source: /home/keck/gen/RCS/xup,v $
-# $Revision: 4.10 $$Date: 2007/06/30 17:00:25 $
+# $Revision: 4.13 $$Date: 2007/07/06 17:00:26 $
 # Contents
 #   1 standard  2 notes  3 args  4 main  5 pod
 
@@ -139,15 +139,18 @@ With -n doesn't warp.
 
 =head1 SEE ALSO
 
-xtb(1), xtc(1), xmv(1), screens(1), xterms(1)
+xchar(1), xtb(1), X11::Tops(3)
 
-X11::Tops(3), X11::Screens(3), X11::XTerms(3)
+=head1 AUTHOR
 
-=head1 RCS
+Brian Keck E<lt>bwkeck@gmail.comE<gt>
+
+=head1 VERSION
 
  $Source: /home/keck/gen/RCS/xup,v $
- $Revision: 4.10 $
- $Date: 2007/06/30 17:00:25 $
+ $Revision: 4.13 $
+ $Date: 2007/07/06 17:00:26 $
+ xchar 0.2
 
 =cut
 

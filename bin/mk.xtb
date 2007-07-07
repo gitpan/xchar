@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 # $Source: /home/keck/gen/RCS/mk.xtb,v $
-# $Revision: 1.2 $$Date: 2007/07/01 07:17:34 $
+# $Revision: 1.6 $$Date: 2007/07/06 17:00:18 $
 # Contents
 #   1 standard  2 args  3 main  4 notes  5 pod
 
@@ -84,10 +84,10 @@ print <<'ZZZ'
       undef;
 
     },
-    order => [
-      qw(0 . , ; f c e a g z t j k r x s h o),
-      1 .. 9, qw(i q I Q), 'a' .. 'z', 'A' .. 'Z', '-', '='
+    order => [ # can repeat characters
+      'a' .. 'z', '0' .. '9', 'A' .. 'Z'
     ],
+  },
 };
 
 ZZZ
@@ -108,7 +108,7 @@ __END__
 
 =head1 NAME
 
-mk.xtb - generate a sample configfile for the xchar(1) taskbar
+mk.xtb - generate a sample configfile for the xchar taskbar
 
 =head1 SYNOPSIS
 
@@ -123,11 +123,16 @@ xchar system.
 
 xchar(1), xtb(1)
 
-=head1 RCS
+=head1 AUTHOR
+
+Brian Keck E<lt>bwkeck@gmail.comE<gt>
+
+=head1 VERSION
 
  $Source: /home/keck/gen/RCS/mk.xtb,v $
- $Revision: 1.2 $
- $Date: 2007/07/01 07:17:34 $
+ $Revision: 1.6 $
+ $Date: 2007/07/06 17:00:18 $
+ xchar 0.2
 
 =cut
 

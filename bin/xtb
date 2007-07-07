@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 # $Source: /home/keck/gen/RCS/xtb,v $
-# $Revision: 4.19 $$Date: 2007/07/01 14:47:30 $
+# $Revision: 4.23 $$Date: 2007/07/07 07:51:55 $
 # Contents
 #   1 standard    9 image              17 xhandler_clients   25 tkid
 #   2 global      10 picture           18 xhandler_active    26 buttons
@@ -167,9 +167,11 @@ my $config = do "$ENV{HOME}/.$cmd";
 
 $xtops->{char} = $config->{char};
 
-{ my $order = $config->{order};
+{ my $order = $config->{order}; # arrayref, element = char
   my %order;
-  $order{$order->[$_]} ||= $_ for 0 .. $#$order;
+  for (0 .. $#$order) {
+    $order{$order->[$_]} = $_ unless defined $order{$order->[$_]}
+  }
   $xtops->{order} = \%order;
 }
 
@@ -396,22 +398,26 @@ sub xhandler_adjust {
 #17# xhandler_clients
 
 sub xhandler_clients {
-  my $deleted = $xtops->update;
+  my @deleted = $xtops->update;
   @xtops = @{$xtops->sorted};
   %xtopsbyid = %{$xtops->byid};
   %xtopsbychar = %{$xtops->bychar};
   $logfile && !@xtops && printlog("empty update\n");
-  if (@$deleted) {
-    print(+@$deleted .  " toplevels deleted at once\n")
-      if @$deleted > 1;
-    for my $xtop (@$deleted) {
-      $xtop->{button}->destroy if $xtop->{button};
+  if (@deleted) {
+    print(+@deleted .  " toplevels deleted at once\n")
+      if @deleted > 1;
+    while (my $xtop = shift @deleted) {
+      if (@xtops || @deleted > -1) { # ie always true
+        $xtop->{button}->destroy if $xtop->{button};
+      } else { # doesn't handle all cases
+        $xtop->{button}->configure(-text => 'aaaargh!')
+	  if $xtop->{button};
+      }
     }
   }
   my $prev;
   for my $xtop (@xtops) {
     unless ($xtop->{button}) {
-      print "additions as well as deletions\n" if @$deleted;
       $xtop->monitor_property_and_visibility_change, next
         if $xtop->{instance} eq $cmd && $name eq $cmd;
       $xtop->monitor_property_change;
@@ -421,10 +427,16 @@ sub xhandler_clients {
       $text = $text =~ /^$c / ? $text : "$char $text";
       my $button = $main->Button(-text => $text, %button);
       if ($xtop == $xtops[0]) {
-        $button->pack(
-          -fill => 'x',
-	  -before => $picture,
-        );
+	if ($picture) {
+          $button->pack(
+            -fill => 'x',
+            -before => $picture,
+          );
+	} else {
+          $button->pack(
+            -fill => 'x',
+          );
+	}
       } else {
         $button->pack(
           -fill => 'x',
@@ -753,7 +765,7 @@ __END__
 # 4.6
 #   renamed rom xls to xtb [+taskbar8]
 
-# $Revision: 4.19 $
+# $Revision: 4.23 $
 
 # ----------------------------------------------------------------------
 
@@ -767,7 +779,7 @@ xtb - xchar taskbar and char allocator
 
 =head1 SYNOPSIS
 
- xtb [-geometry ...] [-r relief] [-w width] [-p]
+ xtb [-geometry ...] [-r relief] [-w width] [-p] [-l logfile]
 
 =head1 DESCRIPTION
 
@@ -815,6 +827,92 @@ The possible relief values are, the 1st being the default:
         raised sunken flat ridge solid groove
 
 The default width is 170.
+
+=head1 XTC
+
+The taskbar can be controlled from the command line with xtc(1), whose
+main function is to send commands to the taskbar via the _XCHAR_COMMAND
+property on the taskbar window.
+
+Commands currently known are:
+
+    restart
+    exit
+
+    left
+    right
+
+    raise [-n] char
+    lower char
+
+    picture [index]
+
+    autoraise [delay]
+
+    dump
+    DUMP
+
+They are sent by for example:
+
+    xtc restart
+    xtc raise -n c
+
+The first word (restart etc) can be abbreviated to 3 letters.
+
+=over 
+
+=item restart
+
+    xtb restarts itself with the same arguments (so -geometry and -l).
+    Use this after you edit the configfile.
+
+=item exit
+
+    xtb exits, ceases, quits
+
+=item left, right
+
+    If the ~/.xscreens entry for the current screen has an 'x' key, it
+    should list a sequence of numbers.  These are treated by xtb as
+    distances from the right side of the screen.  On these commands, xtb
+    aligns its right side to the next 'x' value, moving left or right
+    respectively.  
+    
+    Normally the 'x' values are distances from the right side of client
+    geometries (elsewhere in ~/.xscreens) to the right edge of the
+    screen.  The reason for this is that the right side of text-based
+    clients is often less used than the left side, so is a less annoying
+    place for the taskbar.
+
+    Possibly these functions should be generalized and moved into xmv(1)
+    (which moves any window, not just the taskbar, but so far does not
+    allow relative moves).
+
+=item raise, lower
+
+     These raise or lower the window with the specified character.  The
+     former also gives it the keyboard focus, unless -n is specified.
+
+     They are redundant really, xup(1) & xdn(1) doing the same.
+
+=item picture
+
+    Refreshes the picture if any (see above).  This is useful if the
+    picture fetching machinery is nondeterministic or has changed.
+
+=item autoraise
+
+    The taskbar automatically raises itself some time after being even
+    partly obscured.  The default time is 60 seconds, but can be changed
+    by this command.
+
+=item DUMP, dump
+
+    For debugging.  Causes the taskbar to dump its internal state to
+    stdout, or to the logfile if xtb was started with -l.  DUMP is far
+    more verbose than dump.
+
+=back
 
 =head1 CFGFILE
 
@@ -907,15 +1005,22 @@ A more realistic example involves a bit more Perl:
 
 =head1 SEE ALSO
 
-xtc(1), xup(1), xdn(1), screens(1), xterms(1)
+xchar(1), xtc(1), xup(1), xdn(1), screens(1), xterms(1)
+
+mk.xtb(1), mk.xscreens(1), mk.xchar(1)
 
 X11::Tops(3), X11::Screens(3), X11::XTerms(3)
 
-=head1 RCS
+=head1 AUTHOR
+
+Brian Keck E<lt>bwkeck@gmail.comE<gt>
+
+=head1 VERSION
 
  $Source: /home/keck/gen/RCS/xtb,v $
- $Revision: 4.19 $
- $Date: 2007/07/01 14:47:30 $
+ $Revision: 4.23 $
+ $Date: 2007/07/07 07:51:55 $
+ xchar 0.2
 
 =cut
 

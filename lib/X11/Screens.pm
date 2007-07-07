@@ -1,5 +1,5 @@
-#-MData::Dumper  lSource: /home/keck/lib/perl/RCS/Screens.pm,v $
-# $Revision: 4.14 $$Date: 2007/06/30 17:00:31 $
+# $Source: /home/keck/lib/perl/X11/RCS/Screens.pm,v $
+# $Revision: 4.18 $$Date: 2007/07/06 17:00:30 $
 # Contents
 #   1 standard     7 current     13 font          19 Screen::Client
 #   2 new          8 Screen      14 managers      20 geometry
@@ -19,6 +19,8 @@ package X11::Screens;
 
 use Carp;
 use Data::Dumper;
+
+our $VERSION = 0.2;
 
 # ----------------------------------------------------------------------
 
@@ -161,7 +163,7 @@ sub current {
       $s->{resolution} != $current->{resolution};
     $screen = $s;
   }
-  croak("no entry in $ENV{HOME}/.screens matching current screen")
+  croak("no entry in $ENV{HOME}/.xscreens matching current screen")
     unless $screen;
   $screen->{$_} = $current->{$_} for
     qw(tkmain width height depth resolution);
@@ -376,7 +378,7 @@ __END__
 # 4.13
 #   renamed this from Screens to X11::Screens [+taskbar9]
 
-# $Revision: 4.14 $
+# $Revision: 4.18 $
 
 # ----------------------------------------------------------------------
 
@@ -384,11 +386,11 @@ __END__
 
 =head1 NAME
 
-X11::Screens - extract information for configuring X clients from ~/.screens.
+X11::Screens - extract information for configuring X clients from ~/.xscreens
 
 =head1 SYNOPSIS
 
- require X11::Screens;
+  require X11::Screens;
   $screens = X11::Screens->new;
   @screen_names = $screens->names;
   $screen = $screens->screen('vaio');
@@ -446,30 +448,32 @@ X11::Screens - extract information for configuring X clients from ~/.screens.
 
 =head1 DESCRIPTION
 
-X11::Screens.pm defines packages X11::Screen & X11::Screen::Client as well as X11::Screens.
+X11::Screens.pm defines packages X11::Screen & X11::Screen::Client as
+well as X11::Screens.
 
-Typical use of X11::Screens is to look up information about the current X
-screen in ~/.screens, though this is not necessary.  One exception is to
-fetch the width, height, depth & resolution (dpi) of the current screen,
-without using ~/.screens (of course there are many other ways to do
-this).  Another is to generate other configuration files (such as
+Typical use of X11::Screens is to look up information about the current
+X screen in ~/.xscreens, though this is not necessary.  One exception is
+to fetch the width, height, depth & resolution (dpi) of the current
+screen, without using ~/.xscreens (of course there are many other ways
+to do this).  Another is to generate other configuration files (such as
 Xdefaults and window manager configfiles) for all the screens listed in
-~/.screens, regardless of the current X screen.
+~/.xscreens, regardless of the current X screen.
 
 The only method that communicates with the X server is C<current()>.
 
-The configfile ~/.screens is a perl fragment ending in an expression
+The configfile ~/.xscreens is a perl fragment ending in an expression
 returning a reference to a hash whose keys are screen names (like 'vaio'
 above).  This hashref is returned by X11::Screens->new.
 
-The values are themselves hashrefs, & are essentially X11::Screen instances.
-The keys of a X11::Screen object depend on how the object is obtained.  If
-C<current()> is used then all of width, height, depth & resolution
-occur.  If ~/.screens is used then others occur, but not necessarily all
-these 4, commonly because width & height are enough to distinguish
-screens.
+The values are themselves hashrefs, & are essentially X11::Screen
+instances.  The keys of a X11::Screen object depend on how the object is
+obtained.  If C<current()> is used then all of width, height, depth &
+resolution occur.  If ~/.xscreens is used then others occur, but not
+necessarily all these 4, commonly because width & height are enough to
+distinguish screens.
 
-The 'clients' value of a X11::Screen is a hashref, with key/value pairs like:
+The 'clients' value of a X11::Screen is a hashref, with key/value pairs
+like:
 
       a => {
         geometry => ['72x57+-1+0', '436x745+-1+0'],
@@ -482,14 +486,19 @@ Here the geometry value is an arrayref, width & height being in
 characters for one element & in pixels for the other (order doesn't
 matter).  It can also be a string, which is taken to use pixel units.
 
-If no fonts are specified for a char value, a X11::Screen top level 'font'
-key is looked for.
+If no fonts are specified for a char value, a X11::Screen top level
+'font' key is looked for.
 
-=head1 RCS
+=head1 AUTHOR
+
+Brian Keck E<lt>bwkeck@gmail.comE<gt>
+
+=head1 VERSION
 
  $Source: /home/keck/lib/perl/X11/RCS/Screens.pm,v $
- $Revision: 4.14 $
- $Date: 2007/06/30 17:00:31 $
+ $Revision: 4.18 $
+ $Date: 2007/07/06 17:00:30 $
+ xchar 0.2
 
 =cut
 

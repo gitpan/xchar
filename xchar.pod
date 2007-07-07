@@ -1,6 +1,6 @@
 =head1 NAME
 
-Xchar
+xchar - single character names for X windows and geometries 
 
 =head1 AUTHOR
 
@@ -18,11 +18,11 @@ works if such a window manager is running.
 
 Xchar's novelty is the use of one-character names for windows (such as
 'f' for Firefox).  It also uses one-character names for screen
-positions.  These character mappings are normally defined by the user.
+geometries.  These character mappings are normally defined by the user.
 
 Most of the work in installing Xchar is in adjusting the sample
-configuration files to define these 2 mappings, and in adding key
-mappings to your window manager configuration file.
+configfiles to define these 2 mappings, and in adding key mappings to
+your window manager configfile.
 
 The main programs are the daemon xtb, and the 2 commands xup and xmv.
 The daemon displays a vertical taskbar, each slot showing the character
@@ -30,17 +30,17 @@ and iconname of the corresponding window.  It is typically started soon
 after X (and the window manager).  Currently it doesn't react to events
 in the taskbar (mouse clicks, key presses, etc).  The command xup takes
 a window character argument.  The command xmv takes a window character
-or an X window id argument, and a position character argument.  Both
+or an X window id argument, and a geometry character argument.  Both
 these commands are normally run indirectly by a window manager key
 mapping.  For example modifier1-f might cause xup to raise and focus
 firefox, and modifier2-p might cause xmv to move and resize the window
-under the mouse to position 'p'.
+with keyboard focus to geometry 'p'.
 
 The daemon is responsible for creating the character->window mapping.
-How it does this is defined by the configuration file $HOME/.xtb, which
-includes a function that maps instance names to sequences of characters.
-The former is the usual X instance name (eg 'xterm' and 'Firefox-bin').
-A sequence is allowed because there may be several windows with the same
+How it does this is defined by the configfile $HOME/.xtb, which includes
+a function that maps instance names to sequences of characters.  The
+former is the usual X instance name (eg 'xterm' and 'Firefox-bin').  A
+sequence is allowed because there may be several windows with the same
 instance name.  Xchar is nicer if these clashes are avoided, such as by
 using 'xterm -name xterm/c' and mapping xterm/c to 'c'.
 
@@ -48,8 +48,8 @@ The daemon sets a property _XCHAR_CHAR on each window, containing the
 window's character.  The commands, when they take a window character
 argument, search the toplevel windows for one whose _XCHAR_CHAR matches.
 
-The character->position mapping is defined in the configuration file
-$HOME/.screens.  By position is meant X geometry, such as 484x745+438+0.
+The character->geometry mapping is defined in the configfile
+$HOME/.screens.  By geometry is meant X geometry, such as 484x745+438+0.
 The command xmv makes no distinction between moving and resizing, just
 changing a window's geometry to that specified.  It understands an extra
 wrinkle concerning zeros.  A geometry is used by xmv in combination with
@@ -61,19 +61,18 @@ The distribution contains two other commands.  One is 'xtc', which
 sends simple messages to the daemon via the taskbar property _XCHAR_MSG.
 The set of messages changes by the week, but probably permanent members
 are 'exit', 'restart', and 'dump'.  The other is 'xterms', whose main
-arguments are of the form p.w, where p is a position character and w is
+arguments are of the form p.w, where p is a geometry character and w is
 a window character.  For each such argument xterms starts an xterm at
-the position 'p' and instance name xterm/w.
+the geometry 'p' and instance name xterm/w.
 
 =head1 DETAILS
 
 
-The syntax of the configuration files is Perl's.  They are trivial to
-parse, because all the programs are in Perl.  Even if you don't know
-Perl, the sample configuration files in the distribution (and below)
-should make it easy to create your own.  Both should end in expressions
-evaluating to hash references.  See later sections for details of these
-hashes.
+The syntax of the configfiles is Perl's.  They are trivial to parse,
+because all the programs are in Perl.  Even if you don't know Perl, the
+sample configfiles in the distribution (and below) should make it easy
+to create your own.  Both should end in expressions evaluating to hash
+references.  See later sections for details of these hashes.
 
 Much of the code of Xchar is factored out into the module X11::Tops (in
 the Xchar distribution).  All the programs in Xchar except 'xterms' use
@@ -82,7 +81,7 @@ it.  X11::Tops in turn uses the widely available module X11::Protocol
 
 The daemon also depends on the universally available module Tk.
 
-Common code related to the character->position mapping is in the module
+Common code related to the character->geometry mapping is in the module
 X11::Screens (in the Xchar distribution).  It is used by xmv and xterms,
 and itself depends on Tk.
 
@@ -102,9 +101,9 @@ changed if the latter has advantages.
 
 =head1 DAEMON CONFIGURATION FILE
 
-As mentioned, the Perl code in the configuration files ends in an
-expression evaluating to a hash reference.  The daemon configuration
-file is the simpler, the hash it refers to having only 3 keys:
+As mentioned, the Perl code in the configfiles ends in an expression
+evaluating to a hash reference.  The daemon configfile is the simpler,
+the hash it refers to having only 3 keys:
 
   { char => sub { ... },
     order => [ ... ],
@@ -170,9 +169,9 @@ The command irand is not in the Xchar distribution.
 
 =head1 POSITION CONFIGURATION FILE
 
-The position configuration file is designed to be used on different
-displays, or more precisely on displays of different sizes.  The
-toplevel keys essentially name the display.  The file might contain:
+The geometry configfile is designed to be used on different displays, or
+more precisely on displays of different sizes.  The toplevel keys
+essentially name the display.  The file might contain:
 
     vaio => {
         width => 1368,
@@ -183,7 +182,7 @@ toplevel keys essentially name the display.  The file might contain:
 where no other entry matches 1368 and 768.  The module X11::Screens
 finds the current display's width, height, depth, and resolution (using
 Tk).  If the width and height match the vaio entry then X11::Screens
-will provide the character->position mapping specified in the vaio
+will provide the character->geometry mapping specified in the vaio
 'chars' hash.  If you have two displays with the same width and height
 but want to use different geometries, you can do this by adding depth
 and resolution (dots per inch) keys, provided the displays differ in at
@@ -260,8 +259,15 @@ xterms, the other by xmv.
 
 xxx
 
+=head1 AUTHOR
+
+Brian Keck E<lt>bwkeck@gmail.comE<gt>
+
+=head1 VERSION
+
+  $Source: /home/keck2/xwin/taskbar/makemaker/RCS/xchar.pod,v $
+  $Revision: 1.9 $
+  $Date: 2007/07/05 17:07:23 $
+  xchar version 0.2
+
 =cut
-
-$Source: /home/keck2/xwin/taskbar/makemaker/RCS/xchar.pod,v $
-$Revision: 1.5 $$Date: 2007/06/29 17:06:47 $
-

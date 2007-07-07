@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 # $Source: /home/keck/gen/RCS/mk.xchar,v $
-# $Revision: 1.3 $$Date: 2007/07/01 07:10:06 $
+# $Revision: 1.7 $$Date: 2007/07/06 17:00:18 $
 # Contents
 #   1 standard  2 args  3 main  4 notes  5 pod
 
@@ -63,7 +63,7 @@ print <<'ZZZ'
 
 style xtb notitle
 
-key x a c1 exec exec xtb -geometry -3+1
+key x a c1 exec exec xtb -geometry -3+1 -l /tmp/xtb.log
 
 key Left a 3 exec xtc left
 key Right a 3 exec xtc right
@@ -296,7 +296,7 @@ __END__
 
 =head1 NAME
 
-mk.xchar - help window managers to invoke xchar(1) programs
+mk.xchar - help window managers to invoke xchar programs
 
 =head1 SYNOPSIS
 
@@ -337,16 +337,17 @@ The main maps are:
     ...
     mod3-A raises window 'A'
     ...
-    mod4-0 moves the current window to location '0'
-    mod4-1 moves the current window to location '1'
+    mod4-0 moves the current window to geometry '0'
+    mod4-1 moves the current window to geometry '1'
     ...
-    mod4-a moves the current window to location 'a'
-    mod4-b moves the current window to location 'b'
+    mod4-a moves the current window to geometry 'a'
+    mod4-b moves the current window to geometry 'b'
     ...
-    mod4-A moves the current window to location 'A'
+    mod4-A moves the current window to geometry 'A'
     ...
 
 The remaining maps assume that xtb has character '.':
+
     mod3-.           raises xtb
     mod3-leftarrow   moves xtb to the left
     mod3-rightarrow  moves xtb to the right
@@ -355,10 +356,15 @@ The remaining maps assume that xtb has character '.':
 
 xchar(1)
 
-=head1 RCS
+=head1 AUTHOR
+
+Brian Keck E<lt>bwkeck@gmail.comE<gt>
+
+=head1 VERSION
 
  $Source: /home/keck/gen/RCS/mk.xchar,v $
- $Revision: 1.3 $
- $Date: 2007/07/01 07:10:06 $
+ $Revision: 1.7 $
+ $Date: 2007/07/06 17:00:18 $
+ xchar 0.2
 
 =cut

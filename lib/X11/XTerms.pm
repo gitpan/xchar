@@ -1,5 +1,5 @@
 # $Source: /home/keck/lib/perl/X11/RCS/XTerms.pm,v $
-# $Revision: 1.2 $$Date: 2007/06/30 06:56:43 $
+# $Revision: 1.5 $$Date: 2007/07/04 17:00:32 $
 # Contents
 #   1 standard  2 new  3 localhost  4 prefs  5 notes  6 pod
 
@@ -14,6 +14,8 @@ package X11::XTerms;
 
 use Carp;
 use Data::Dumper;
+
+our $VERSION = 0.2;
 
 # ----------------------------------------------------------------------
 
@@ -128,8 +130,7 @@ __END__
 
 =head1 NAME
 
-X11::XTerms - find xterm attributes in ~/.xterms appropriate to the
-current X display, via ~/.screens.
+X11::XTerms - find xterm attributes in ~/.xterms 
 
 =head1 SYNOPSIS
 
@@ -145,11 +146,16 @@ current X display, via ~/.screens.
 
 =head1 DESCRIPTION
 
-=head1 RCS
+=head1 AUTHOR
+
+Brian Keck E<lt>bwkeck@gmail.comE<gt>
+
+=head1 VERSION
 
  $Source: /home/keck/lib/perl/X11/RCS/XTerms.pm,v $
- $Revision: 1.2 $
- $Date: 2007/06/30 06:56:43 $
+ $Revision: 1.5 $
+ $Date: 2007/07/04 17:00:32 $
+ xchar 0.2
 
 =cut
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 # $Source: /home/keck/gen/RCS/xtc,v $
-# $Revision: 2.12 $$Date: 2007/07/01 14:47:42 $
+# $Revision: 2.15 $$Date: 2007/07/06 07:52:20 $
 # Contents
 #   1 standard  2 notes  3 usage()  4 args  5 xtops  6 list  7 xtop
 
@@ -96,7 +96,7 @@ my $root = $X->root;
 if ($list) {
   open ALIGN, '| align -t -lrl'; select ALIGN;
   for my $xtop (sort { $a->char cmp $b->char } values %{$xtops->byid}) {
-    print join("\t", 
+    print join("\t",
       $xtop->char,
       $xtop->id,
       $xtop->instance,
@@ -132,34 +132,21 @@ __END__
 
 =head1 NAME
 
-xtc - xchar taskbar ((xtb) controller
+xtc - xchar taskbar (xtb) controller
 
 =head1 SYNOPSIS
 
  xtc command ...
+
  xtc -l
 
 =head1 DESCRIPTION
-  
-Controls xtb by setting the _XLS_COMMAND property of xtb's toplevel
-window to 'command ...'.  
 
-Currently xtb understands the following property values:
+Controls the xchar taskbar xtb by setting the _XCHAR_COMMAND property of
+xtb's toplevel window to 'command ...'.
 
-      autoraise [delay]
-      config
-      dump              dumps most of the task list
-      DUMP              dumps the whole task list
-      exit
-      left
-      lower char
-      picture [index]
-      raise [-n] char
-      restart
-      right
+The available commands are described in xtb(1).
 
-The 1st word can be abbreviated to 3 letters.
- 
 With -l, the X clients are listed (char, id, instance, class, icon) in
 alphabetical order of chars (not taskbar order).  No command is sent to
 xtb.
@@ -175,15 +162,18 @@ or by running xtc under the name xtc1 for xtb1, or xtc2 for xtb2, etc.
 
 =head1 SEE ALSO
 
-xtb(1), xup(1), xdn(1), screens(1), xterms(1)
+xtb(1), X11::Tops(3)
 
-X11::Tops(3), X11::Screens(3), X11::XTerms(3)
+=head1 AUTHOR
 
-=head1 RCS
+Brian Keck E<lt>bwkeck@gmail.comE<gt>
+
+=head1 VERSION
 
  $Source: /home/keck/gen/RCS/xtc,v $
- $Revision: 2.12 $
- $Date: 2007/07/01 14:47:42 $
+ $Revision: 2.15 $
+ $Date: 2007/07/06 07:52:20 $
+ xchar 0.2
 
 =cut
 

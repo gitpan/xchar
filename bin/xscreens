@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
 # $Source: /home/keck/gen/RCS/xscreens,v $
-# $Revision: 4.6 $$Date: 2007/06/29 17:00:24 $
+# $Revision: 4.9 $$Date: 2007/07/05 13:58:21 $
 # Contents
-#   1 standard  3 usage         5 args    7 output
-#   2 notes     4 Data::Dumper  6 screen
+#   1 standard      3 args    5 output  7 pod
+#   2 Data::Dumper  4 screen  6 notes
 
 # ----------------------------------------------------------------------
 
@@ -14,13 +14,109 @@ use warnings;
 
 (my $cmd = "$0") =~ s%.*/%%;
 
+sub usage { print "Usage: $cmd -help\n"; }
 sub quit { (@_) ? print STDERR "$cmd quitting: @_\n" : &usage; exit 1 }
 
 require X11::Screens;
 
+sub perldoc {
+  my ($perldoc, $less);
+  for (split /:/, $ENV{PATH}) {
+    $perldoc = "$_/perldoc" if -x "$_/perldoc";
+    last if $perldoc; next if $less;
+    $less = "$_/less" if -x "$_/less";
+  }
+  if ($perldoc) {
+    $ENV{LESSCHARSET} = 'latin1';
+    exec $perldoc, $0
+  } elsif ($less) {
+    exec $less, '+/^# Sorry.*', $0
+  } else {
+    print
+      "Sorry, there's no perldoc(1) or even less(1) in your \$PATH\n" .
+      "The documentation can be found at the end of $0\n";
+    exit 1
+  }
+}
+
 # ----------------------------------------------------------------------
 
-#2# notes
+#2# Data::Dumper
+
+use Data::Dumper;
+$Data::Dumper::Terse = 1;
+$Data::Dumper::Indent = 1;
+$Data::Dumper::Quotekeys = 0;
+$Data::Dumper::Sortkeys = sub {
+  my @grep_v = sort grep !/^(tkmain|screens)$/, keys %{$_[0]};
+  \@grep_v;
+};
+
+# ----------------------------------------------------------------------
+
+#3# args
+
+my $current;
+my %given;
+
+while (@ARGV) {
+  $_ = shift;
+  perldoc() if /^-+(man|help)/;
+  $current = 1, next if /^-c/;
+  $given{$1} = shift, next if /^-+(.+)/;
+  unshift @ARGV, $_;
+  last;
+}
+
+quit("neither -c nor any -key given") unless $current || %given;
+
+# ----------------------------------------------------------------------
+
+#4# screen
+
+my $screen;
+
+if ($current) {
+  $screen = X11::Screens->current || X11::Screen->current;
+} else {
+  my $screens = X11::Screens->new;
+  my @screens = $screens->match_tight(%given);
+  my $x = @screens;
+  quit(
+    'more than 1 screen matches ' .
+    join ', ', map { "$_ => $given{$_}" } sort keys %given
+  ) if @screens > 1;
+  $screen = $screens[0];
+}
+
+# ----------------------------------------------------------------------
+
+#5# output
+
+print(Dumper $screen) unless @ARGV;
+
+my $status = 0;
+
+for my $arg (@ARGV) {
+  my @wanted = split /\./, $arg;
+  my $value = $screen;
+  my $sofar; # for errors
+  for (@wanted) {
+    $value = $value->{$_};
+    $sofar .= defined $sofar ? ".$_" : $_;
+    $status = 1, $value = '', print(STDERR "'$sofar' undefined"), last
+      unless defined $value;
+  }
+  print ref $value ? Dumper $value : "$value\n";
+}
+
+exit $status;
+
+__END__
+
+# ----------------------------------------------------------------------
+
+#6# notes
 
 # +xwin/config
 # +perl/tk
@@ -65,98 +161,50 @@ require X11::Screens;
 
 # ----------------------------------------------------------------------
 
-#3# usage
+#7# pod
 
-sub usage {
-(my $revision = '$Revision: 4.6 $ ') =~ s/^\S*\s(\S*)\s.*/$1/;
-(my $date = '$Date: 2007/06/29 17:00:24 $ ') =~ s/^\S*\s(\S*)\s.*/$1/;
-my $source = '$Source: /home/keck/gen/RCS/xscreens,v $';
-$source =~ s/\$//g; $source =~ s%/RCS/%/%; $source =~ s/,v\s*//;
-print
-"Usage:
-    $cmd -c key1 ...
-    $cmd -key1 value1 key2 ...
-    $cmd -key1 value1 -key2 value2 key3 ...
-  The flag (-xxx) arguments specify a screen from ~/.screens.
-  The other arguments specify what information for this screen is to be
-    output (stdout).  In their absence all information about the screen
-    is output.
-  Both kinds of arguments can contain dots which separate keys.
-  If a value is a reference then it's output via Data::Dumper.
-    Otherwise it's output directly, followed by a newline.  Nonexistent
-    values are output as empty strings, & a warning written to stderr.
-Example: $cmd -c name clients.a.geometry
-$source
-Revision $revision $date
-";
-}
+# Sorry, there's no perldoc in your $PATH, so here's the raw pod
 
-# ----------------------------------------------------------------------
+=head1 NAME
 
-#4# Data::Dumper
+xscreens - wrapper round X11::Screens
 
-use Data::Dumper;
-$Data::Dumper::Terse = 1;
-$Data::Dumper::Indent = 1;
-$Data::Dumper::Quotekeys = 0;
-$Data::Dumper::Sortkeys = sub {
-  my @grep_v = sort grep !/^(tkmain|screens)$/, keys %{$_[0]};
-  \@grep_v;
-};
+=head1 SYNOPSIS
 
-# ----------------------------------------------------------------------
+  xscreens -c key1 ...
+  xscreens -key1 value1 key2 ...
+  xscreens -key1 value1 -key2 value2 key3 ...
 
-#5# args
+  xscreens -c name clients.a.geometry
 
-my $current;
-my %given;
+=head1 DESCRIPTION
 
-while (@ARGV) {
-  $_ = shift;
-  usage(), exit if /^-+(man|help)/;
-  $current = 1, next if /^-c/;
-  $given{$1} = shift, next if /^-+(.+)/;
-  unshift @ARGV, $_;
-  last;
-}
+The flag (-xxx) arguments specify a screen from ~/.xscreens.
 
-quit("neither -c nor any -key given") unless $current || %given;
+The other arguments specify what information for this screen is to be
+output (stdout).  In their absence all information about the screen is
+output.
 
-# ----------------------------------------------------------------------
+Both kinds of arguments can contain dots which separate keys.
 
-#6# screen
+If a value is a reference then it's output via Data::Dumper.  Otherwise
+it's output directly, followed by a newline.  Nonexistent values are
+output as empty strings, & a warning written to stderr.
 
-my $screen;
+=head1 SEE ALSO
 
-if ($current) {
-  $screen = X11::Screens->current || X11::Screen->current;
-} else {
-  my $screens = X11::Screens->new;
-  my @screens = $screens->match_tight(%given);
-  my $x = @screens;
-  quit(
-    'more than 1 screen matches ' .
-    join ', ', map { "$_ => $given{$_}" } sort keys %given
-  ) if @screens > 1;
-  $screen = $screens[0];
-}
+X11::Screens(3), xchar(1)
 
-# ----------------------------------------------------------------------
+=head1 AUTHOR
 
-#7# output
+Brian Keck E<lt>bwkeck@gmail.comE<gt>
 
-print(Dumper $screen) unless @ARGV;
+=head1 VERSION
 
-for my $arg (@ARGV) {
-  my @wanted = split /\./, $arg;
-  my $value = $screen;
-  my $sofar; # for errors
-  for (@wanted) {
-    $value = $value->{$_};
-    $sofar .= defined $sofar ? ".$_" : $_;
-    $value = '', print(STDERR "'$sofar' undefined"), last
-      unless defined $value;
-  }
-  print ref $value ? Dumper $value : "$value\n";
-}
+ $Source: /home/keck/gen/RCS/xscreens,v $
+ $Revision: 4.9 $
+ $Date: 2007/07/05 13:58:21 $
+ xchar 0.2
+
+=cut
 

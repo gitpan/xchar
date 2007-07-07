@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 #!/usr/bin/perl -w
 # $Source: /home/keck/gen/RCS/xterms,v $
-# $Revision: 8.8 $$Date: 2007/06/30 17:00:25 $
+# $Revision: 8.11 $$Date: 2007/07/05 17:00:30 $
 # Contents
 #   1 standard   4 args/1      7 config    10 display       13 notes
 #   2 constants  5 screenname  8 args/2    11 xenvironemnt  14 perldoc
@@ -514,11 +514,11 @@ for (@xterms) {
 #   XTerms.pm
 #   +taskbar8
 # 8.6
-#   dropped WM_INSTANCE & WM_ICHAR [+taskbar9
+#   dropped WM_INSTANCE & WM_ICHAR [+taskbar9]
 # 8.8
 #   moved XTerms to X11::Xterms
 
-# $Revision: 8.8 $
+# $Revision: 8.11 $
 
 # ----------------------------------------------------------------------
 
@@ -831,11 +831,16 @@ Outputs (lists) the config file via $PAGER or more.
 Just outputs the commands that would be run.
 Still uses X11::Screen, so DISPLAY or -display needs to be correct.
 
-=head1 RCS
+=head1 AUTHOR
+
+Brian Keck E<lt>bwkeck@gmail.comE<gt>
+
+=head1 VERSION
 
  $Source: /home/keck/gen/RCS/xterms,v $
- $Revision: 8.8 $
- $Date: 2007/06/30 17:00:25 $
+ $Revision: 8.11 $
+ $Date: 2007/07/05 17:00:30 $
+ xchar 0.2
 
 =cut
 
